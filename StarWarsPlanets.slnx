@@ -1,0 +1,4 @@
+<Solution>
+  <Project Path="StarWarsPlanets.Api/StarWarsPlanets.Api.csproj" />
+  <Project Path="StarWarsPlanets.Blazor/StarWarsPlanets.Blazor.csproj" Id="43e4d961-8d20-4495-95e9-f6f98c63ee4d" />
+</Solution>

@@ -1,0 +1,203 @@
+﻿@page "/planets"
+@using StarWarsPlanets.Blazor.Models
+@using StarWarsPlanets.Blazor.Services
+@inject PlanetService PlanetService
+
+<PageTitle>Planets</PageTitle>
+
+@if(loading){
+    <p>Cargando planetas...</p>
+}else if(planets == null || planets.Count == 0){
+    <p>No hay planetas registrados.</p>
+}else{
+    <div class="container">
+        <h1 class="py-2">Planetas de Star Wars</h1>
+        <table class="table">
+            <thead>
+                <tr>
+                    <th>Nombre</th>
+                    <th>Rotación</th>
+                    <th>Órbita</th>
+                    <th>Clima</th>
+                    <th>Terreno</th>
+                    <th>Agua en la superficie</th>
+                    <th>Población</th>
+                    <th>Acciones</th>   
+                </tr>
+            </thead>
+            <tbody>
+                @foreach(var planet in planets){
+                    <tr>
+                        <td>@planet.Name</td>
+                        <td>@planet.RotationPeriod</td>
+                        <td>@planet.OrbitalPeriod</td>
+                        <td>@planet.Climate</td>
+                        <td>@planet.Terrain</td>
+                        <td>@planet.SurfaceWater</td>
+                        <td>@planet.Population</td>
+                        <td>
+                            <button class="btn btn-danger btn-sm"
+                                    @onclick="() => DeletePlanet(planet.Id)">
+                                Eliminar
+                            </button>
+                        </td>
+                    </tr>
+                }
+            </tbody>
+        </table>
+    </div>
+}
+
+<hr />
+
+<div class="container pb-2">
+    <h2 class="pb-2">Agregar nuevo planeta</h2>
+    <EditForm Model="newPlanet" OnValidSubmit="CreatePlanet">
+        <div class="mb-3">
+            <label for="name" class="form-label">Nombre</label>
+            <InputText 
+                type="text" 
+                class="form-control" 
+                id="name" 
+                @bind-value="newPlanet.Name" 
+            />
+        </div>
+        <div class="mb-3">
+            <label for="rotationPeriod" class="form-label">Período de Rotación</label>
+            <InputNumber 
+                TValue="int" 
+                class="form-control" 
+                id="rotationPeriod" 
+                @bind-Value="newPlanet.RotationPeriod" 
+            />
+        </div>
+        <div class="mb-3">
+            <label for="orbitalPeriod" class="form-label">Período de Órbita</label>
+            <InputNumber 
+                TValue="int" 
+                class="form-control" 
+                id="orbitalPeriod" 
+                @bind-Value="newPlanet.OrbitalPeriod" 
+            />
+        </div>
+        <div class="mb-3">
+            <label for="climate" class="form-label">Clima</label>
+            <InputText 
+                class="form-control" 
+                id="climate" 
+                @bind-Value="newPlanet.Climate" 
+            />
+        </div>
+        <div class="mb-3">
+            <label for="terrain" class="form-label">Terreno</label>
+            <InputText 
+                class="form-control" 
+                id="terrain" 
+                @bind-Value="newPlanet.Terrain" 
+            />
+        </div>
+        <div class="mb-3">
+            <label for="surfaceWater" class="form-label">Agua en la Superficie</label>
+            <InputText 
+                class="form-control" 
+                id="surfaceWater" 
+                @bind-Value="newPlanet.SurfaceWater" 
+            />
+        </div>
+        <div class="mb-3">
+            <label for="population" class="form-label">Población</label>
+            <InputNumber 
+                TValue="int" 
+                class="form-control" 
+                id="population" 
+                @bind-Value="newPlanet.Population" 
+            />
+        </div>
+        <button 
+            type="submit" 
+            class="btn btn-primary"
+            >
+            Guardar Planeta
+        </button>
+    </EditForm>
+</div>
+
+
+@if(!string.IsNullOrEmpty(message)){
+    <div class="alert alert-info mt-3">@message</div>
+}
+
+@code {
+    private List<Planet> planets = new();
+    private Planet newPlanet = new();
+    private bool loading = true;
+    private string message = string.Empty;
+
+    protected override async Task OnInitializedAsync()
+    {
+        await LoadPlanets();
+    }
+
+    private async Task LoadPlanets()
+    {
+        try
+        {
+            loading = true;
+            planets = await PlanetService.GetPlanetsAsync();
+            loading = false;
+        }
+        catch (Exception ex)
+        {
+            message = $"Error al cargar los planetas: {ex.Message}";
+        }
+        finally
+        {
+            loading = false;
+        }
+    }
+
+    private async Task CreatePlanet()
+    {
+        try
+        {
+            var success = await PlanetService.CreatePlanetAsync(newPlanet);
+
+            if (success)
+            {
+                message = "Planeta creado exitosamente.";
+                newPlanet = new Planet(); // Reset the form
+                await LoadPlanets(); // Refresh the list
+            }
+            else
+            {
+                message = "Error al crear el planeta.";
+            }
+        }
+        catch (Exception ex)
+        {
+            message = $"Error al crear el planeta: {ex.Message}";
+        }
+    }
+
+    private async Task DeletePlanet(int id)
+    {
+        var success = await PlanetService.DeletePlanetAsync(id);
+
+        try
+        {
+            if(success)
+            {
+                message = "Planeta eliminado exitosamente.";
+                await LoadPlanets(); // Refresh the list
+            }
+            else
+            {
+                message = "Error al eliminar el planeta.";
+            }
+        }
+        catch (Exception ex)
+        {
+            message = $"Error al eliminar el planeta: {ex.Message}";
+        }
+    }
+}
